@@ -256,6 +256,11 @@
             color: white;
         }
 
+        .badge-friends {
+            background: #6f42c1;
+            color: white;
+        }
+
         .badge-store {
             background: #007bff;
             color: white;
@@ -353,15 +358,16 @@
                             </div>
                             <div class="form-group">
                                 <label>نوع الأوردر</label>
-                                <select id="orderType" required>
+                                <select id="orderType" required onchange="handleOrderTypeChange()">
                                     <option value="">اختر النوع</option>
-                                    <option value="online">أونلاين</option>
-                                    <option value="store">للمحل</option>
+                                    <option value="friends">تسليم لمعارف</option>
+                                    <option value="online">أونلاين من خلال الويب سايت</option>
+                                    <option value="store">محل</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>طريقة البيع</label>
-                                <select id="saleMethod" required onchange="toggleCommission()">
+                            <div class="form-group" id="saleMethodGroup" style="display:none;">
+                                <label>طريقة البيع (للمحل فقط)</label>
+                                <select id="saleMethod" onchange="toggleCommission()">
                                     <option value="">اختر الطريقة</option>
                                     <option value="wholesale">جملة</option>
                                     <option value="consignment">أمانة</option>
@@ -464,8 +470,9 @@
                             <label>نوع الأوردر</label>
                             <select id="filterOrderType" onchange="filterOrders()">
                                 <option value="">الكل</option>
+                                <option value="friends">تسليم لمعارف</option>
                                 <option value="online">أونلاين</option>
-                                <option value="store">للمحل</option>
+                                <option value="store">محل</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -514,6 +521,10 @@
                         <div class="value" id="statTotalOrders">0</div>
                     </div>
                     <div class="stat-card">
+                        <h4>👥 تسليم لمعارف</h4>
+                        <div class="value" id="statFriendsOrders">0</div>
+                    </div>
+                    <div class="stat-card">
                         <h4>🌐 أوردرات أونلاين</h4>
                         <div class="value" id="statOnlineOrders">0</div>
                     </div>
@@ -525,19 +536,15 @@
                         <h4>💰 إجمالي المبيعات</h4>
                         <div class="value" id="statTotalSales">0</div>
                     </div>
+                    <div class="stat-card">
+                        <h4>💵 إجمالي الأرباح</h4>
+                        <div class="value" id="statTotalProfit">0</div>
+                    </div>
                 </div>
 
                 <div class="form-section">
-                    <h3>📊 مقارنة التفصيلية</h3>
+                    <h3>📊 مقارنة المحلات (جملة vs أمانة)</h3>
                     <div class="stats-grid">
-                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                            <h4>أونلاين - جملة</h4>
-                            <div class="value" id="statOnlineWholesale">0</div>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                            <h4>أونلاين - أمانة</h4>
-                            <div class="value" id="statOnlineConsignment">0</div>
-                        </div>
                         <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                             <h4>محل - جملة</h4>
                             <div class="value" id="statStoreWholesale">0</div>
@@ -599,6 +606,26 @@
             } else if (tabName === 'statistics') {
                 updateStatistics();
             }
+        }
+
+        function handleOrderTypeChange() {
+            const orderType = document.getElementById('orderType').value;
+            const saleMethodGroup = document.getElementById('saleMethodGroup');
+            const saleMethod = document.getElementById('saleMethod');
+            const commissionGroup = document.getElementById('commissionGroup');
+            
+            if (orderType === 'store') {
+                saleMethodGroup.style.display = 'block';
+                saleMethod.required = true;
+            } else {
+                saleMethodGroup.style.display = 'none';
+                saleMethod.required = false;
+                saleMethod.value = '';
+                commissionGroup.classList.add('hidden');
+                document.getElementById('commissionRate').value = 0;
+            }
+            
+            calculateOrderSummary();
         }
 
         function toggleCommission() {
@@ -680,6 +707,7 @@
                 return;
             }
 
+            const orderType = document.getElementById('orderType').value;
             const saleMethod = document.getElementById('saleMethod').value;
             const commissionRate = parseFloat(document.getElementById('commissionRate').value) || 0;
 
@@ -694,7 +722,8 @@
             let commissionAmount = 0;
             let netAmount = totalPrice;
 
-            if (saleMethod === 'consignment') {
+            // العمولة فقط للمحل + أمانة
+            if (orderType === 'store' && saleMethod === 'consignment') {
                 commissionAmount = totalPrice * (commissionRate / 100);
                 netAmount = totalPrice - commissionAmount;
             }
@@ -707,7 +736,7 @@
             document.getElementById('netAmount').textContent = netAmount.toFixed(2) + ' جنيه';
             document.getElementById('netProfit').textContent = netProfit.toFixed(2) + ' جنيه';
 
-            if (saleMethod === 'consignment') {
+            if (orderType === 'store' && saleMethod === 'consignment') {
                 document.getElementById('commissionAmountGroup').classList.remove('hidden');
                 document.getElementById('netAmountGroup').classList.remove('hidden');
             } else {
@@ -726,6 +755,7 @@
                 return;
             }
 
+            const orderType = document.getElementById('orderType').value;
             const saleMethod = document.getElementById('saleMethod').value;
             const commissionRate = parseFloat(document.getElementById('commissionRate').value) || 0;
 
@@ -740,7 +770,8 @@
             let commissionAmount = 0;
             let netAmount = totalPrice;
 
-            if (saleMethod === 'consignment') {
+            // العمولة فقط للمحل + أمانة
+            if (orderType === 'store' && saleMethod === 'consignment') {
                 commissionAmount = totalPrice * (commissionRate / 100);
                 netAmount = totalPrice - commissionAmount;
             }
@@ -748,8 +779,8 @@
             const order = {
                 orderNumber: document.getElementById('orderNumber').value,
                 orderDate: document.getElementById('orderDate').value,
-                orderType: document.getElementById('orderType').value,
-                saleMethod: saleMethod,
+                orderType: orderType,
+                saleMethod: orderType === 'store' ? saleMethod : null,
                 customerName: document.getElementById('customerName').value,
                 commissionRate: commissionRate,
                 products: [...currentProducts],
@@ -792,11 +823,14 @@
                 const date = new Date(order.orderDate);
                 const formattedDate = date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'});
                 
-                const orderTypeBadge = order.orderType === 'online' ? 
+                const orderTypeBadge = order.orderType === 'friends' ? 
+                    '<span class="badge badge-friends">معارف</span>' : 
+                    order.orderType === 'online' ?
                     '<span class="badge badge-online">أونلاين</span>' : 
                     '<span class="badge badge-store">محل</span>';
                 
-                const saleMethodBadge = order.saleMethod === 'wholesale' ? 
+                const saleMethodBadge = !order.saleMethod ? '-' :
+                    order.saleMethod === 'wholesale' ? 
                     '<span class="badge badge-wholesale">جملة</span>' : 
                     '<span class="badge badge-consignment">أمانة</span>';
 
@@ -812,3 +846,109 @@
                         <button class="btn btn-secondary" onclick="viewOrderDetails(${index})">عرض</button>
                         <button class="btn btn-danger" onclick="deleteOrder(${index})">حذف</button>
                     </td>
+                `;
+            });
+        }
+
+        function filterOrders() {
+            const orderType = document.getElementById('filterOrderType').value;
+            const saleMethod = document.getElementById('filterSaleMethod').value;
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+
+            let filtered = orders.filter(order => {
+                let match = true;
+
+                if (orderType && order.orderType !== orderType) match = false;
+                if (saleMethod && order.saleMethod !== saleMethod) match = false;
+                
+                if (dateFrom) {
+                    const orderDate = new Date(order.orderDate).setHours(0,0,0,0);
+                    const fromDate = new Date(dateFrom).setHours(0,0,0,0);
+                    if (orderDate < fromDate) match = false;
+                }
+                
+                if (dateTo) {
+                    const orderDate = new Date(order.orderDate).setHours(0,0,0,0);
+                    const toDate = new Date(dateTo).setHours(0,0,0,0);
+                    if (orderDate > toDate) match = false;
+                }
+
+                return match;
+            });
+
+            displayOrders(filtered);
+        }
+
+        function viewOrderDetails(index) {
+            const order = orders[index];
+            let productsDetails = '';
+            
+            order.products.forEach(product => {
+                productsDetails += `\n- ${product.name}: ${product.quantity} × ${product.price} = ${product.total.toFixed(2)} جنيه`;
+            });
+
+            alert(`
+📦 تفاصيل الأوردر
+
+رقم الأوردر: ${order.orderNumber}
+التاريخ: ${new Date(order.orderDate).toLocaleString('ar-EG')}
+النوع: ${order.orderType === 'friends' ? 'تسليم لمعارف' : order.orderType === 'online' ? 'أونلاين' : 'محل'}
+${order.saleMethod ? 'طريقة البيع: ' + (order.saleMethod === 'wholesale' ? 'جملة' : 'أمانة') + '\n' : ''}العميل: ${order.customerName}
+
+المنتجات:${productsDetails}
+
+إجمالي السعر: ${order.totalPrice.toFixed(2)} جنيه
+إجمالي التكلفة: ${order.totalCost.toFixed(2)} جنيه
+${order.commissionAmount > 0 ? `عمولة المحل (${order.commissionRate}%): ${order.commissionAmount.toFixed(2)} جنيه\nصافي المبلغ: ${order.netAmount.toFixed(2)} جنيه\n` : ''}صافي الربح: ${order.netProfit.toFixed(2)} جنيه
+
+${order.notes ? 'ملاحظات: ' + order.notes : ''}
+            `);
+        }
+
+        function deleteOrder(index) {
+            if (confirm('هل أنت متأكد من حذف هذا الأوردر؟')) {
+                orders.splice(index, 1);
+                displayOrders();
+                updateStatistics();
+                alert('تم حذف الأوردر بنجاح');
+            }
+        }
+
+        function updateStatistics() {
+            const totalOrders = orders.length;
+            const friendsOrders = orders.filter(o => o.orderType === 'friends').length;
+            const onlineOrders = orders.filter(o => o.orderType === 'online').length;
+            const storeOrders = orders.filter(o => o.orderType === 'store').length;
+            
+            const totalSales = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+            const totalProfit = orders.reduce((sum, o) => sum + o.netProfit, 0);
+            
+            const storeWholesale = orders.filter(o => o.orderType === 'store' && o.saleMethod === 'wholesale')
+                .reduce((sum, o) => sum + o.netProfit, 0);
+            const storeConsignment = orders.filter(o => o.orderType === 'store' && o.saleMethod === 'consignment')
+                .reduce((sum, o) => sum + o.netProfit, 0);
+            
+            const wholesaleProfit = orders.filter(o => o.saleMethod === 'wholesale')
+                .reduce((sum, o) => sum + o.netProfit, 0);
+            const consignmentProfit = orders.filter(o => o.saleMethod === 'consignment')
+                .reduce((sum, o) => sum + o.netProfit, 0);
+
+            document.getElementById('statTotalOrders').textContent = totalOrders;
+            document.getElementById('statFriendsOrders').textContent = friendsOrders;
+            document.getElementById('statOnlineOrders').textContent = onlineOrders;
+            document.getElementById('statStoreOrders').textContent = storeOrders;
+            document.getElementById('statTotalSales').textContent = totalSales.toFixed(2);
+            document.getElementById('statTotalProfit').textContent = totalProfit.toFixed(2);
+            
+            document.getElementById('statStoreWholesale').textContent = storeWholesale.toFixed(2);
+            document.getElementById('statStoreConsignment').textContent = storeConsignment.toFixed(2);
+            
+            document.getElementById('statWholesaleProfit').textContent = wholesaleProfit.toFixed(2);
+            document.getElementById('statConsignmentProfit').textContent = consignmentProfit.toFixed(2);
+        }
+
+        initializeForm();
+    </script>
+</body>
+</html>
