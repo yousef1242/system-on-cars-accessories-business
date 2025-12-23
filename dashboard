@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الأوردرات</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .products-table th,
+        .products-table td {
+            padding: 12px;
+            text-align: right;
+            border: 1px solid #ddd;
+        }
+
+        .products-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .products-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-card h4 {
+            font-size: 1em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            padding: 15px;
+            text-align: right;
+            border: 1px solid #ddd;
+        }
+
+        .orders-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        .orders-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .badge-online {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-store {
+            background: #007bff;
+            color: white;
+        }
+
+        .badge-wholesale {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .badge-consignment {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .filters {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .summary-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .summary-item h5 {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .summary-item .amount {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 نظام إدارة الأوردرات</h1>
+            <p>إدارة كاملة لأوردراتك أونلاين والمحلات</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('new-order')">➕ أوردر جديد</button>
+            <button class="tab" onclick="switchTab('orders-list')">📋 الأوردرات</button>
+            <button class="tab" onclick="switchTab('statistics')">📊 الإحصائيات</button>
+        </div>
+
+        <div class="content">
+            <!-- تاب إضافة أوردر جديد -->
+            <div id="new-order" class="tab-content active">
+                <form id="orderForm">
+                    <div class="form-section">
+                        <h3>📝 بيانات الأوردر الأساسية</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>رقم الأوردر</label>
+                                <input type="text" id="orderNumber" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>تاريخ ووقت الأوردر</label>
+                                <input type="datetime-local" id="orderDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>نوع الأوردر</label>
+                                <select id="orderType" required>
+                                    <option value="">اختر النوع</option>
+                                    <option value="online">أونلاين</option>
+                                    <option value="store">للمحل</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>طريقة البيع</label>
+                                <select id="saleMethod" required onchange="toggleCommission()">
+                                    <option value="">اختر الطريقة</option>
+                                    <option value="wholesale">جملة</option>
+                                    <option value="consignment">أمانة</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>اسم العميل / المحل</label>
+                                <input type="text" id="customerName" required>
+                            </div>
+                            <div class="form-group hidden" id="commissionGroup">
+                                <label>نسبة العمولة (%)</label>
+                                <input type="number" id="commissionRate" min="0" max="100" step="0.1" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>🛍️ المنتجات</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>اسم المنتج</label>
+                                <input type="text" id="productName">
+                            </div>
+                            <div class="form-group">
+                                <label>سعر القطعة</label>
+                                <input type="number" id="productPrice" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>تكلفة القطعة</label>
+                                <input type="number" id="productCost" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>الكمية</label>
+                                <input type="number" id="productQuantity" min="1" value="1">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addProduct()">➕ إضافة المنتج</button>
+                        
+                        <table class="products-table" id="productsTable" style="display:none;">
+                            <thead>
+                                <tr>
+                                    <th>اسم المنتج</th>
+                                    <th>السعر</th>
+                                    <th>التكلفة</th>
+                                    <th>الكمية</th>
+                                    <th>الإجمالي</th>
+                                    <th>إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>📝 ملاحظات (اختياري)</h3>
+                        <div class="form-group">
+                            <textarea id="notes" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="summary-section" id="orderSummary" style="display:none;">
+                        <h3>💰 ملخص الأوردر</h3>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <h5>إجمالي السعر</h5>
+                                <div class="amount" id="totalPrice">0</div>
+                            </div>
+                            <div class="summary-item">
+                                <h5>إجمالي التكلفة</h5>
+                                <div class="amount" id="totalCost">0</div>
+                            </div>
+                            <div class="summary-item hidden" id="commissionAmountGroup">
+                                <h5>عمولة المحل</h5>
+                                <div class="amount" id="commissionAmount">0</div>
+                            </div>
+                            <div class="summary-item hidden" id="netAmountGroup">
+                                <h5>صافي المبلغ</h5>
+                                <div class="amount" id="netAmount">0</div>
+                            </div>
+                            <div class="summary-item">
+                                <h5>صافي الربح</h5>
+                                <div class="amount" id="netProfit">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-success">✅ حفظ الأوردر</button>
+                        <button type="button" class="btn btn-danger" onclick="resetForm()">🔄 إعادة تعيين</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- تاب عرض الأوردرات -->
+            <div id="orders-list" class="tab-content">
+                <div class="filters">
+                    <h3>🔍 الفلاتر</h3>
+                    <div class="filters-grid">
+                        <div class="form-group">
+                            <label>نوع الأوردر</label>
+                            <select id="filterOrderType" onchange="filterOrders()">
+                                <option value="">الكل</option>
+                                <option value="online">أونلاين</option>
+                                <option value="store">للمحل</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>طريقة البيع</label>
+                            <select id="filterSaleMethod" onchange="filterOrders()">
+                                <option value="">الكل</option>
+                                <option value="wholesale">جملة</option>
+                                <option value="consignment">أمانة</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>من تاريخ</label>
+                            <input type="date" id="filterDateFrom" onchange="filterOrders()">
+                        </div>
+                        <div class="form-group">
+                            <label>إلى تاريخ</label>
+                            <input type="date" id="filterDateTo" onchange="filterOrders()">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>رقم الأوردر</th>
+                                <th>التاريخ</th>
+                                <th>النوع</th>
+                                <th>طريقة البيع</th>
+                                <th>العميل/المحل</th>
+                                <th>إجمالي السعر</th>
+                                <th>صافي الربح</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- تاب الإحصائيات -->
+            <div id="statistics" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>📦 إجمالي الأوردرات</h4>
+                        <div class="value" id="statTotalOrders">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>🌐 أوردرات أونلاين</h4>
+                        <div class="value" id="statOnlineOrders">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>🏪 أوردرات المحل</h4>
+                        <div class="value" id="statStoreOrders">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>💰 إجمالي المبيعات</h4>
+                        <div class="value" id="statTotalSales">0</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📊 مقارنة التفصيلية</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <h4>أونلاين - جملة</h4>
+                            <div class="value" id="statOnlineWholesale">0</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <h4>أونلاين - أمانة</h4>
+                            <div class="value" id="statOnlineConsignment">0</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <h4>محل - جملة</h4>
+                            <div class="value" id="statStoreWholesale">0</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <h4>محل - أمانة</h4>
+                            <div class="value" id="statStoreConsignment">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>💵 الأرباح حسب طريقة البيع</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>أرباح الجملة</h4>
+                            <div class="value" id="statWholesaleProfit">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>أرباح الأمانة</h4>
+                            <div class="value" id="statConsignmentProfit">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orders = [];
+        let currentProducts = [];
+        let orderCounter = 1;
+
+        function generateOrderNumber() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const counter = String(orderCounter).padStart(4, '0');
+            return `ORD-${year}${month}${day}-${counter}`;
+        }
+
+        function initializeForm() {
+            document.getElementById('orderNumber').value = generateOrderNumber();
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('orderDate').value = now.toISOString().slice(0, 16);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'orders-list') {
+                displayOrders();
+            } else if (tabName === 'statistics') {
+                updateStatistics();
+            }
+        }
+
+        function toggleCommission() {
+            const saleMethod = document.getElementById('saleMethod').value;
+            const commissionGroup = document.getElementById('commissionGroup');
+            
+            if (saleMethod === 'consignment') {
+                commissionGroup.classList.remove('hidden');
+            } else {
+                commissionGroup.classList.add('hidden');
+                document.getElementById('commissionRate').value = 0;
+            }
+            
+            calculateOrderSummary();
+        }
+
+        function addProduct() {
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value) || 0;
+            const cost = parseFloat(document.getElementById('productCost').value) || 0;
+            const quantity = parseInt(document.getElementById('productQuantity').value) || 0;
+
+            if (!name || price <= 0 || cost <= 0 || quantity <= 0) {
+                alert('يرجى ملء جميع بيانات المنتج بشكل صحيح');
+                return;
+            }
+
+            const product = {
+                name,
+                price,
+                cost,
+                quantity,
+                total: price * quantity
+            };
+
+            currentProducts.push(product);
+            displayProducts();
+            clearProductFields();
+            calculateOrderSummary();
+        }
+
+        function displayProducts() {
+            const tbody = document.getElementById('productsTableBody');
+            const table = document.getElementById('productsTable');
+            
+            tbody.innerHTML = '';
+            
+            currentProducts.forEach((product, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${product.price.toFixed(2)}</td>
+                    <td>${product.cost.toFixed(2)}</td>
+                    <td>${product.quantity}</td>
+                    <td>${product.total.toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="removeProduct(${index})">حذف</button></td>
+                `;
+            });
+            
+            table.style.display = currentProducts.length > 0 ? 'table' : 'none';
+        }
+
+        function removeProduct(index) {
+            currentProducts.splice(index, 1);
+            displayProducts();
+            calculateOrderSummary();
+        }
+
+        function clearProductFields() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productCost').value = '';
+            document.getElementById('productQuantity').value = '1';
+        }
+
+        function calculateOrderSummary() {
+            if (currentProducts.length === 0) {
+                document.getElementById('orderSummary').style.display = 'none';
+                return;
+            }
+
+            const saleMethod = document.getElementById('saleMethod').value;
+            const commissionRate = parseFloat(document.getElementById('commissionRate').value) || 0;
+
+            let totalPrice = 0;
+            let totalCost = 0;
+
+            currentProducts.forEach(product => {
+                totalPrice += product.price * product.quantity;
+                totalCost += product.cost * product.quantity;
+            });
+
+            let commissionAmount = 0;
+            let netAmount = totalPrice;
+
+            if (saleMethod === 'consignment') {
+                commissionAmount = totalPrice * (commissionRate / 100);
+                netAmount = totalPrice - commissionAmount;
+            }
+
+            const netProfit = netAmount - totalCost;
+
+            document.getElementById('totalPrice').textContent = totalPrice.toFixed(2) + ' جنيه';
+            document.getElementById('totalCost').textContent = totalCost.toFixed(2) + ' جنيه';
+            document.getElementById('commissionAmount').textContent = commissionAmount.toFixed(2) + ' جنيه';
+            document.getElementById('netAmount').textContent = netAmount.toFixed(2) + ' جنيه';
+            document.getElementById('netProfit').textContent = netProfit.toFixed(2) + ' جنيه';
+
+            if (saleMethod === 'consignment') {
+                document.getElementById('commissionAmountGroup').classList.remove('hidden');
+                document.getElementById('netAmountGroup').classList.remove('hidden');
+            } else {
+                document.getElementById('commissionAmountGroup').classList.add('hidden');
+                document.getElementById('netAmountGroup').classList.add('hidden');
+            }
+
+            document.getElementById('orderSummary').style.display = 'block';
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (currentProducts.length === 0) {
+                alert('يرجى إضافة منتج واحد على الأقل');
+                return;
+            }
+
+            const saleMethod = document.getElementById('saleMethod').value;
+            const commissionRate = parseFloat(document.getElementById('commissionRate').value) || 0;
+
+            let totalPrice = 0;
+            let totalCost = 0;
+
+            currentProducts.forEach(product => {
+                totalPrice += product.price * product.quantity;
+                totalCost += product.cost * product.quantity;
+            });
+
+            let commissionAmount = 0;
+            let netAmount = totalPrice;
+
+            if (saleMethod === 'consignment') {
+                commissionAmount = totalPrice * (commissionRate / 100);
+                netAmount = totalPrice - commissionAmount;
+            }
+
+            const order = {
+                orderNumber: document.getElementById('orderNumber').value,
+                orderDate: document.getElementById('orderDate').value,
+                orderType: document.getElementById('orderType').value,
+                saleMethod: saleMethod,
+                customerName: document.getElementById('customerName').value,
+                commissionRate: commissionRate,
+                products: [...currentProducts],
+                notes: document.getElementById('notes').value,
+                totalPrice: totalPrice,
+                totalCost: totalCost,
+                commissionAmount: commissionAmount,
+                netAmount: netAmount,
+                netProfit: netAmount - totalCost
+            };
+
+            orders.push(order);
+            orderCounter++;
+            
+            alert('✅ تم حفظ الأوردر بنجاح!');
+            resetForm();
+        });
+
+        function resetForm() {
+            document.getElementById('orderForm').reset();
+            currentProducts = [];
+            displayProducts();
+            document.getElementById('orderSummary').style.display = 'none';
+            initializeForm();
+        }
+
+        function displayOrders(filteredOrders = null) {
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '';
+
+            const ordersToDisplay = filteredOrders || orders;
+
+            if (ordersToDisplay.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا توجد أوردرات</td></tr>';
+                return;
+            }
+
+            ordersToDisplay.forEach((order, index) => {
+                const row = tbody.insertRow();
+                const date = new Date(order.orderDate);
+                const formattedDate = date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'});
+                
+                const orderTypeBadge = order.orderType === 'online' ? 
+                    '<span class="badge badge-online">أونلاين</span>' : 
+                    '<span class="badge badge-store">محل</span>';
+                
+                const saleMethodBadge = order.saleMethod === 'wholesale' ? 
+                    '<span class="badge badge-wholesale">جملة</span>' : 
+                    '<span class="badge badge-consignment">أمانة</span>';
+
+                row.innerHTML = `
+                    <td>${order.orderNumber}</td>
+                    <td>${formattedDate}</td>
+                    <td>${orderTypeBadge}</td>
+                    <td>${saleMethodBadge}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.totalPrice.toFixed(2)} جنيه</td>
+                    <td>${order.netProfit.toFixed(2)} جنيه</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewOrderDetails(${index})">عرض</button>
+                        <button class="btn btn-danger" onclick="deleteOrder(${index})">حذف</button>
+                    </td>
