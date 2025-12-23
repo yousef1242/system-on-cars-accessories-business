@@ -579,34 +579,35 @@
         let currentProducts = [];
         let orderCounter = 1;
 
-        // تحميل البيانات من التخزين عند فتح الصفحة
-        async function loadData() {
+        // تحميل البيانات من localStorage عند فتح الصفحة
+        function loadData() {
             try {
-                const ordersData = await window.storage.get('orders_data');
-                if (ordersData && ordersData.value) {
-                    const data = JSON.parse(ordersData.value);
+                const savedData = localStorage.getItem('orders_data');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
                     orders = data.orders || [];
                     orderCounter = data.orderCounter || 1;
-                    console.log('✅ تم تحميل البيانات بنجاح');
+                    console.log('✅ تم تحميل البيانات بنجاح:', orders.length, 'أوردر');
                 }
             } catch (error) {
-                console.log('لا توجد بيانات محفوظة سابقاً');
+                console.log('لا توجد بيانات محفوظة سابقاً أو حدث خطأ:', error.message);
             }
         }
 
-        // حفظ البيانات في التخزين
-        async function saveData() {
+        // حفظ البيانات في localStorage
+        function saveData() {
             try {
                 const data = {
                     orders: orders,
                     orderCounter: orderCounter,
                     lastUpdated: new Date().toISOString()
                 };
-                await window.storage.set('orders_data', JSON.stringify(data));
-                console.log('✅ تم حفظ البيانات بنجاح');
+                
+                localStorage.setItem('orders_data', JSON.stringify(data));
+                console.log('✅ تم حفظ البيانات بنجاح:', orders.length, 'أوردر');
             } catch (error) {
                 console.error('خطأ في حفظ البيانات:', error);
-                alert('حدث خطأ في حفظ البيانات');
+                alert('حدث خطأ في حفظ البيانات: ' + error.message);
             }
         }
 
@@ -790,7 +791,7 @@
             document.getElementById('orderSummary').style.display = 'block';
         }
 
-        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
             if (currentProducts.length === 0) {
@@ -838,10 +839,10 @@
             orders.push(order);
             orderCounter++;
             
-            await saveData(); // حفظ البيانات
+            saveData(); // حفظ البيانات
             
             alert('✅ تم حفظ الأوردر بنجاح!');
-            resetForm();
+            window.resetForm();
         });
 
         window.resetForm = function() {
@@ -951,12 +952,12 @@ ${order.notes ? 'ملاحظات: ' + order.notes : ''}
             `);
         }
 
-        window.deleteOrder = async function(index) {
+        window.deleteOrder = function(index) {
             if (confirm('هل أنت متأكد من حذف هذا الأوردر؟')) {
                 orders.splice(index, 1);
-                await saveData(); // حفظ البيانات بعد الحذف
-                displayOrders();
-                updateStatistics();
+                saveData(); // حفظ البيانات بعد الحذف
+                window.displayOrders();
+                window.updateStatistics();
                 alert('تم حذف الأوردر بنجاح');
             }
         }
@@ -995,29 +996,31 @@ ${order.notes ? 'ملاحظات: ' + order.notes : ''}
         }
 
         // مسح كل البيانات المحفوظة
-        window.clearAllData = async function() {
+        window.clearAllData = function() {
             if (confirm('⚠️ هل أنت متأكد من مسح كل البيانات؟ لن تستطيع استرجاعها!')) {
                 try {
-                    await window.storage.delete('orders_data');
+                    localStorage.removeItem('orders_data');
                     orders = [];
                     orderCounter = 1;
-                    displayOrders();
-                    updateStatistics();
+                    window.displayOrders();
+                    window.updateStatistics();
                     alert('✅ تم مسح جميع البيانات بنجاح');
-                    location.reload();
+                    initializeForm();
                 } catch (error) {
                     console.error('خطأ في مسح البيانات:', error);
+                    alert('حدث خطأ في مسح البيانات');
                 }
             }
         }
 
         // تحميل البيانات عند فتح الصفحة
-        loadData().then(() => {
-            initializeForm();
-            if (orders.length > 0) {
-                console.log(`تم تحميل ${orders.length} أوردر من التخزين`);
-            }
-        });
+        loadData();
+        initializeForm();
+        if (orders.length > 0) {
+            console.log(`✅ تم تحميل ${orders.length} أوردر من التخزين`);
+        } else {
+            console.log('💡 لا توجد أوردرات محفوظة، ابدأ بإضافة أوردر جديد!');
+        }
     </script>
 </body>
 </html>
