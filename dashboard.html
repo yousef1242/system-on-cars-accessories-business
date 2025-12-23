@@ -336,9 +336,9 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('new-order')">➕ أوردر جديد</button>
-            <button class="tab" onclick="switchTab('orders-list')">📋 الأوردرات</button>
-            <button class="tab" onclick="switchTab('statistics')">📊 الإحصائيات</button>
+            <button class="tab active" onclick="window.switchTab('new-order')">➕ أوردر جديد</button>
+            <button class="tab" onclick="window.switchTab('orders-list')">📋 الأوردرات</button>
+            <button class="tab" onclick="window.switchTab('statistics')">📊 الإحصائيات</button>
         </div>
 
         <div class="content">
@@ -457,6 +457,7 @@
                     <div class="action-buttons">
                         <button type="submit" class="btn btn-success">✅ حفظ الأوردر</button>
                         <button type="button" class="btn btn-danger" onclick="resetForm()">🔄 إعادة تعيين</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearAllData()">🗑️ مسح كل البيانات</button>
                     </div>
                 </form>
             </div>
@@ -578,6 +579,37 @@
         let currentProducts = [];
         let orderCounter = 1;
 
+        // تحميل البيانات من التخزين عند فتح الصفحة
+        async function loadData() {
+            try {
+                const ordersData = await window.storage.get('orders_data');
+                if (ordersData && ordersData.value) {
+                    const data = JSON.parse(ordersData.value);
+                    orders = data.orders || [];
+                    orderCounter = data.orderCounter || 1;
+                    console.log('✅ تم تحميل البيانات بنجاح');
+                }
+            } catch (error) {
+                console.log('لا توجد بيانات محفوظة سابقاً');
+            }
+        }
+
+        // حفظ البيانات في التخزين
+        async function saveData() {
+            try {
+                const data = {
+                    orders: orders,
+                    orderCounter: orderCounter,
+                    lastUpdated: new Date().toISOString()
+                };
+                await window.storage.set('orders_data', JSON.stringify(data));
+                console.log('✅ تم حفظ البيانات بنجاح');
+            } catch (error) {
+                console.error('خطأ في حفظ البيانات:', error);
+                alert('حدث خطأ في حفظ البيانات');
+            }
+        }
+
         function generateOrderNumber() {
             const date = new Date();
             const year = date.getFullYear();
@@ -598,7 +630,18 @@
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            event.target.classList.add('active');
+            // تحديد التاب النشط
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if (tab.textContent.includes('أوردر جديد') && tabName === 'new-order') {
+                    tab.classList.add('active');
+                } else if (tab.textContent.includes('الأوردرات') && tabName === 'orders-list') {
+                    tab.classList.add('active');
+                } else if (tab.textContent.includes('الإحصائيات') && tabName === 'statistics') {
+                    tab.classList.add('active');
+                }
+            });
+            
             document.getElementById(tabName).classList.add('active');
             
             if (tabName === 'orders-list') {
@@ -628,7 +671,7 @@
             calculateOrderSummary();
         }
 
-        function toggleCommission() {
+        window.toggleCommission = function() {
             const saleMethod = document.getElementById('saleMethod').value;
             const commissionGroup = document.getElementById('commissionGroup');
             
@@ -642,7 +685,7 @@
             calculateOrderSummary();
         }
 
-        function addProduct() {
+        window.addProduct = function() {
             const name = document.getElementById('productName').value;
             const price = parseFloat(document.getElementById('productPrice').value) || 0;
             const cost = parseFloat(document.getElementById('productCost').value) || 0;
@@ -688,7 +731,7 @@
             table.style.display = currentProducts.length > 0 ? 'table' : 'none';
         }
 
-        function removeProduct(index) {
+        window.removeProduct = function(index) {
             currentProducts.splice(index, 1);
             displayProducts();
             calculateOrderSummary();
@@ -747,7 +790,7 @@
             document.getElementById('orderSummary').style.display = 'block';
         }
 
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             if (currentProducts.length === 0) {
@@ -795,19 +838,21 @@
             orders.push(order);
             orderCounter++;
             
+            await saveData(); // حفظ البيانات
+            
             alert('✅ تم حفظ الأوردر بنجاح!');
             resetForm();
         });
 
-        function resetForm() {
+        window.resetForm = function() {
             document.getElementById('orderForm').reset();
             currentProducts = [];
-            displayProducts();
+            displayOrders();
             document.getElementById('orderSummary').style.display = 'none';
             initializeForm();
         }
 
-        function displayOrders(filteredOrders = null) {
+        window.displayOrders = function(filteredOrders = null) {
             const tbody = document.getElementById('ordersTableBody');
             tbody.innerHTML = '';
 
@@ -850,7 +895,7 @@
             });
         }
 
-        function filterOrders() {
+        window.filterOrders = function() {
             const orderType = document.getElementById('filterOrderType').value;
             const saleMethod = document.getElementById('filterSaleMethod').value;
             const dateFrom = document.getElementById('filterDateFrom').value;
@@ -880,7 +925,7 @@
             displayOrders(filtered);
         }
 
-        function viewOrderDetails(index) {
+        window.viewOrderDetails = function(index) {
             const order = orders[index];
             let productsDetails = '';
             
@@ -906,16 +951,17 @@ ${order.notes ? 'ملاحظات: ' + order.notes : ''}
             `);
         }
 
-        function deleteOrder(index) {
+        window.deleteOrder = async function(index) {
             if (confirm('هل أنت متأكد من حذف هذا الأوردر؟')) {
                 orders.splice(index, 1);
+                await saveData(); // حفظ البيانات بعد الحذف
                 displayOrders();
                 updateStatistics();
                 alert('تم حذف الأوردر بنجاح');
             }
         }
 
-        function updateStatistics() {
+        window.updateStatistics = function() {
             const totalOrders = orders.length;
             const friendsOrders = orders.filter(o => o.orderType === 'friends').length;
             const onlineOrders = orders.filter(o => o.orderType === 'online').length;
@@ -948,7 +994,30 @@ ${order.notes ? 'ملاحظات: ' + order.notes : ''}
             document.getElementById('statConsignmentProfit').textContent = consignmentProfit.toFixed(2);
         }
 
-        initializeForm();
+        // مسح كل البيانات المحفوظة
+        window.clearAllData = async function() {
+            if (confirm('⚠️ هل أنت متأكد من مسح كل البيانات؟ لن تستطيع استرجاعها!')) {
+                try {
+                    await window.storage.delete('orders_data');
+                    orders = [];
+                    orderCounter = 1;
+                    displayOrders();
+                    updateStatistics();
+                    alert('✅ تم مسح جميع البيانات بنجاح');
+                    location.reload();
+                } catch (error) {
+                    console.error('خطأ في مسح البيانات:', error);
+                }
+            }
+        }
+
+        // تحميل البيانات عند فتح الصفحة
+        loadData().then(() => {
+            initializeForm();
+            if (orders.length > 0) {
+                console.log(`تم تحميل ${orders.length} أوردر من التخزين`);
+            }
+        });
     </script>
 </body>
 </html>
